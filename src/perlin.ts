@@ -31,7 +31,7 @@ export const Perlin = (
 
     for (let row_index = 0; row_index < dimensions[1]; row_index++) {
         for (let col_index = 0; col_index < dimensions[0]; col_index++) {
-            values[row_index][col_index]  /= max_value
+            values[row_index][col_index] /= max_value
         }
     }
 
