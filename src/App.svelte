@@ -2,11 +2,14 @@
     import * as PIXI from "pixi.js"
     import {onMount} from "svelte"
     import {Perlin} from "./perlin"
+    import {Button} from "./ui"
+    import {eventBus} from "./events"
 
     const windowWidth = 1600
     const windowHeight = 800
     const baseCellDimension = 10
     const baseTexture = PIXI.Texture.WHITE
+    let gridContainer: PIXI.Container
 
     let app = new PIXI.Application()
 
@@ -30,9 +33,11 @@
 
     const generateGrid = (position: number[], dimensions: number[]) => {
         let data: number[][] = Perlin(dimensions, 8)
-        console.log(data)
+        if (gridContainer) {
+            gridContainer.destroy({children:true})
+        }
 
-        const gridContainer = new PIXI.Container()
+        gridContainer = new PIXI.Container()
         gridContainer.position.set(position[0], position[1])
         app.stage.addChild(gridContainer)
         for (let row_index = 0; row_index < dimensions[1]; row_index++) {
@@ -63,6 +68,9 @@
         window.addEventListener("resize", scaleApp)
 
         generateGrid([200, 0], [80, 80])
+        app.stage.addChild(Button("Generate", [0, 100]))
+
+        eventBus.on("generate", () => {generateGrid([200, 0], [80, 80])})
     })
 </script>
 
