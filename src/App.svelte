@@ -2,12 +2,13 @@
     import * as PIXI from "pixi.js"
     import {onMount} from "svelte"
     import {Perlin} from "./perlin"
-    import {Button} from "./ui"
+    import {UI} from "./ui"
     import {eventBus} from "./events"
 
     const windowWidth = 1600
     const windowHeight = 800
-    const baseCellDimension = 10
+    const gridSize = [800, 800]
+    const uiPosition = [1000, 0]
     const baseTexture = PIXI.Texture.WHITE
     let gridContainer: PIXI.Container
 
@@ -21,7 +22,7 @@
         wordWrapWidth: 200
     })
     const sidePanelText = new PIXI.Text({
-        text: "12311111111111111111111111111111111111111111111111 111111111111111 11111111 111111  1 1 1 1 11",
+        text: "",
         style: textStyle,})
     app.stage.addChild(sidePanelText)
 
@@ -39,12 +40,12 @@
 
         gridContainer = new PIXI.Container()
         gridContainer.position.set(position[0], position[1])
+        gridContainer.scale.set(Math.min(gridSize[0] / dimensions[0], gridSize[1] / dimensions[1]))
         app.stage.addChild(gridContainer)
         for (let row_index = 0; row_index < dimensions[1]; row_index++) {
             for (let col_index = 0; col_index < dimensions[0]; col_index++) {
                 const cellSprite = new PIXI.Sprite({
-                    x:baseCellDimension * col_index, y:baseCellDimension * row_index,
-                    width: baseCellDimension, height: baseCellDimension,
+                    x:col_index, y:row_index,
                     texture: baseTexture, alpha: data[row_index][col_index],
                 })
                 cellSprite.interactive = true
@@ -68,9 +69,12 @@
         window.addEventListener("resize", scaleApp)
 
         generateGrid([200, 0], [80, 80])
-        app.stage.addChild(Button("Generate", [0, 100]))
 
-        eventBus.on("generate", () => {generateGrid([200, 0], [80, 80])})
+        const ui = UI()
+        ui.position.set(uiPosition[0], uiPosition[1])
+        app.stage.addChild(ui)
+
+        eventBus.on("generateGrid", (dimensions) => {generateGrid([200, 0], dimensions)})
     })
 </script>
 
