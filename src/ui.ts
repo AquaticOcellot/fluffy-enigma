@@ -1,5 +1,6 @@
 import * as PIXI from "pixi.js"
 import {eventBus} from "./events"
+import {data} from "./data"
 
 const margin = 5
 const textStyle = new PIXI.TextStyle({
@@ -8,19 +9,23 @@ const textStyle = new PIXI.TextStyle({
 })
 const generateButtonPosition = [0, 0]
 const dimensionSliderDimensions = [600, 50]
-let gridDimensions = [0, 0]
 
 export const UI = () => {
     const UI = new PIXI.Container()
 
     const generateButton = createButton("Generate")
-    generateButton.addEventListener("pointertap", () => {eventBus.emit("generateGrid", gridDimensions)})
+    generateButton.addEventListener("pointertap", () => {eventBus.emit("generateGrid")})
     generateButton.position.set(generateButtonPosition[0], generateButtonPosition[1])
     UI.addChild(generateButton)
 
-    const dimensionSlider = createSlider(dimensionSliderDimensions, [1, 200], 1)
-    dimensionSlider.position.set(0, generateButton.y + generateButton.height)
-    UI.addChild(dimensionSlider)
+    const widthSlider = createSlider(dimensionSliderDimensions, [1, 200], "gridWidth")
+    eventBus.emit("adjustSlider", "gridWidth", data["gridWidth"])
+    widthSlider.position.set(0, generateButton.y + generateButton.height)
+    UI.addChild(widthSlider)
+
+    const heightSlider = createSlider(dimensionSliderDimensions, [1, 200], "gridHeight")
+    heightSlider.position.set(0, widthSlider.y + widthSlider.height)
+    UI.addChild(heightSlider)
 
     return UI
 }
@@ -51,18 +56,19 @@ const createButton = (
 const createSlider = (
     dimensions: number[],
     range: number[],
-    initialValue: number,
+    sliderId: string
 )=> {
     const clampValue = (value: number, min: number, max: number) => {
         return Math.min(Math.max(value, min), max)
     }
-    const adjustText = () => {
+    const adjust = (value: number) => {
+        handle.position.set(value / (range[1] - range[0]) * handleVisualRange[1], 0)
+
         value = Math.round(value)
-        dimensions = [value, value]
         valueText.text = value.toString()
         valueText.position.set(handle.x + (handle.width - valueText.width) / 2, (handle.height - valueText.height) / 2)
     }
-    let value = clampValue(initialValue, range[0], range[1])
+    let value = 0
     const slider = new PIXI.Container()
 
     const background = new PIXI.Sprite({
@@ -83,22 +89,25 @@ const createSlider = (
     const handleVisualRange = [0, dimensions[0] - handle.width]
     background.interactive = true
     let dragging = false
-    const disableDragging = () => {
-        dragging = false
-    }
     background.addEventListener("pointerdown", () => {dragging = true})
-    background.addEventListener("pointerup", disableDragging)
-    background.addEventListener("pointerupoutside", disableDragging)
+    background.addEventListener("pointerup", () => {dragging = false})
+    background.addEventListener("pointerupoutside", () => {dragging = false})
 
     background.addEventListener("pointermove", (event) => {
         if (dragging) {
-            handle.position.set(clampValue(
-                event.getLocalPosition(slider).x - handle.width / 2, handleVisualRange[0], handleVisualRange[1]), 0)
-            value = Math.round(handle.position.x / handleVisualRange[1] * (range[1] - range[0]) + range[0])
-            gridDimensions = [value, value]
-            adjustText()
+            value = clampValue(Math.round((event.getLocalPosition(slider).x - handle.width / 2) / handleVisualRange[1]
+                * (range[1] - range[0]) + range[0]), range[0], range[1])
+            eventBus.emit("changeValue", sliderId, value)
+            adjust(value)
         }
     })
 
+    eventBus.on("adjustSlider", (id, value) => {
+        if (id === sliderId) {
+            adjust(value)
+        }
+    })
+
+    adjust(data[sliderId])
     return slider
 }

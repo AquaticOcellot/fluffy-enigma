@@ -4,6 +4,7 @@
     import {Perlin} from "./perlin"
     import {UI} from "./ui"
     import {eventBus} from "./events"
+    import {data} from "./data"
 
     const windowWidth = 1600
     const windowHeight = 800
@@ -74,7 +75,7 @@
         ui.position.set(uiPosition[0], uiPosition[1])
         app.stage.addChild(ui)
 
-        eventBus.on("generateGrid", (dimensions) => {generateGrid([200, 0], dimensions)})
+        eventBus.on("generateGrid", () => {generateGrid([200, 0], [data["gridWidth"], data["gridHeight"]])})
     })
 </script>
 
