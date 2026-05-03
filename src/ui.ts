@@ -1,29 +1,86 @@
 import * as PIXI from "pixi.js"
-import {eventBus} from "./events"
-import {data} from "./data"
+import {gridViewDimensions} from "./config/initialSettings"
+import {worldSettings} from "./state/settings"
+import type {WorldSettings, Vector2} from "./types"
 
-const margin = 5
+const overlayPadding = 10
+const hoverInfoWidth = 200
 const textStyle = new PIXI.TextStyle({
     fill: "0xffffff",
     fontSize: 20,
+    wordWrap: true,
+    breakWords: true,
+    wordWrapWidth: hoverInfoWidth - overlayPadding * 2,
 })
-const generateButtonPosition = [0, 0]
-const dimensionSliderDimensions = [600, 50]
+const dimensionSliderDimensions = {width: gridViewDimensions.width, height: 50}
 
-export const UI = () => {
-    const UI = new PIXI.Container()
+export type UIContainer = PIXI.Container & {
+    setHoverInfo: (text: string, cellPosition: Vector2 | null, cellSize: number) => void
+    clearHoverInfo: () => void
+}
+
+export type UIOptions = {
+    onGenerateWorld: () => void
+    onSettingChange: (id: keyof WorldSettings, value: number) => void
+}
+
+export const createUI = (options: UIOptions) => {
+    const UI = new PIXI.Container() as UIContainer
+    const hoverInfo = new PIXI.Container()
+    const hoverBackground = new PIXI.Sprite({
+        texture: PIXI.Texture.WHITE,
+        tint: "0x000000",
+        alpha: 0.6,
+    })
+    const hoverText = new PIXI.Text({
+        text: "",
+        style: textStyle,
+    })
+
+    hoverInfo.addChild(hoverBackground)
+    hoverInfo.addChild(hoverText)
+    hoverInfo.visible = false
+    UI.addChild(hoverInfo)
+
+    const layoutHoverInfo = (alignRight: boolean, panelWidth: number, panelHeight: number) => {
+        hoverText.position.set(overlayPadding, overlayPadding)
+        hoverBackground.width = panelWidth
+        hoverBackground.height = panelHeight
+        hoverInfo.position.set(
+            alignRight ? gridViewDimensions.width - panelWidth : 0,
+            0
+        )
+    }
+
+    UI.setHoverInfo = (text: string, cellPosition: Vector2 | null, cellSize: number) => {
+        hoverText.text = text
+        const panelWidth = hoverInfoWidth
+        const panelHeight = hoverText.height + overlayPadding * 2
+        const intersectsTopLeft = cellPosition !== null
+            && cellPosition.x < panelWidth
+            && cellPosition.y < panelHeight
+            && cellPosition.x + cellSize > 0
+            && cellPosition.y + cellSize > 0
+        layoutHoverInfo(intersectsTopLeft, panelWidth, panelHeight)
+        hoverInfo.visible = true
+    }
+
+    UI.clearHoverInfo = () => {
+        hoverInfo.visible = false
+    }
 
     const generateButton = createButton("Generate")
-    generateButton.addEventListener("pointertap", () => {eventBus.emit("generateGrid")})
-    generateButton.position.set(generateButtonPosition[0], generateButtonPosition[1])
+    generateButton.on("pointertap", options.onGenerateWorld)
+    generateButton.position.set(0, gridViewDimensions.height)
     UI.addChild(generateButton)
 
-    const widthSlider = createSlider(dimensionSliderDimensions, [1, 200], "gridWidth")
-    eventBus.emit("adjustSlider", "gridWidth", data["gridWidth"])
+    const widthSlider = createSlider(dimensionSliderDimensions,
+        {min: 1, max: 200}, "gridWidth", options.onSettingChange)
     widthSlider.position.set(0, generateButton.y + generateButton.height)
     UI.addChild(widthSlider)
 
-    const heightSlider = createSlider(dimensionSliderDimensions, [1, 200], "gridHeight")
+    const heightSlider = createSlider(dimensionSliderDimensions,
+        {min: 1, max: 200}, "gridHeight", options.onSettingChange)
     heightSlider.position.set(0, widthSlider.y + widthSlider.height)
     UI.addChild(heightSlider)
 
@@ -32,6 +89,7 @@ export const UI = () => {
 
 const createButton = (
     text: string,
+    margin: number = 10
 ) => {
     const button = new PIXI.Container()
     const textElement = new PIXI.Text({
@@ -47,22 +105,23 @@ const createButton = (
     })
     button.addChild(background)
     button.addChild(textElement)
-    button.interactive = true
-    button.addEventListener("pointerenter", () => {background.tint = "0x222222"})
-    button.addEventListener("pointerleave", () => {background.tint = "0x333333"})
+    button.eventMode = "static"
+    button.on("pointerenter", () => {background.tint = "0x222222"})
+    button.on("pointerleave", () => {background.tint = "0x333333"})
     return button
 }
 
 const createSlider = (
-    dimensions: number[],
-    range: number[],
-    sliderId: string
+    dimensions: {width: number, height: number},
+    range: {min: number, max: number},
+    sliderId: keyof WorldSettings,
+    onChange: (id: keyof WorldSettings, value: number) => void
 )=> {
     const clampValue = (value: number, min: number, max: number) => {
         return Math.min(Math.max(value, min), max)
     }
     const adjust = (value: number) => {
-        handle.position.set(value / (range[1] - range[0]) * handleVisualRange[1], 0)
+        handle.position.set((value - range.min) / (range.max - range.min) * handleVisualRange.max, 0)
 
         value = Math.round(value)
         valueText.text = value.toString()
@@ -72,42 +131,37 @@ const createSlider = (
     const slider = new PIXI.Container()
 
     const background = new PIXI.Sprite({
-        width: dimensions[0], height:dimensions[1],
+        width: dimensions.width, height: dimensions.height,
         parent: slider,
         texture: PIXI.Texture.WHITE,
         tint: "0x111111"
     })
 
     const handle = new PIXI.Sprite({
-        width: dimensions[0] / 10, height:dimensions[1],
+        width: dimensions.width / 10, height: dimensions.height,
         parent: slider,
         texture: PIXI.Texture.WHITE,
         tint: "0x444444"
     })
     const valueText = new PIXI.Text({text: value, style: textStyle, parent: slider})
 
-    const handleVisualRange = [0, dimensions[0] - handle.width]
-    background.interactive = true
+    const handleVisualRange = {max: dimensions.width - handle.width}
+
+    background.eventMode = "static"
     let dragging = false
-    background.addEventListener("pointerdown", () => {dragging = true})
-    background.addEventListener("pointerup", () => {dragging = false})
-    background.addEventListener("pointerupoutside", () => {dragging = false})
+    background.on("pointerdown", () => {dragging = true})
+    background.on("pointerup", () => {dragging = false})
+    background.on("pointerupoutside", () => {dragging = false})
 
-    background.addEventListener("pointermove", (event) => {
+    background.on("pointermove", (event) => {
         if (dragging) {
-            value = clampValue(Math.round((event.getLocalPosition(slider).x - handle.width / 2) / handleVisualRange[1]
-                * (range[1] - range[0]) + range[0]), range[0], range[1])
-            eventBus.emit("changeValue", sliderId, value)
+            value = clampValue(Math.round((event.getLocalPosition(slider).x - handle.width / 2) / handleVisualRange.max
+                * (range.max - range.min) + range.min), range.min, range.max)
+            onChange(sliderId, value)
             adjust(value)
         }
     })
 
-    eventBus.on("adjustSlider", (id, value) => {
-        if (id === sliderId) {
-            adjust(value)
-        }
-    })
-
-    adjust(data[sliderId])
+    adjust(worldSettings[sliderId])
     return slider
 }

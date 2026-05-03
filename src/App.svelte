@@ -1,85 +1,76 @@
 <script lang="ts">
-    import * as PIXI from "pixi.js"
     import {onMount} from "svelte"
-    import {Perlin} from "./perlin"
-    import {UI} from "./ui"
-    import {eventBus} from "./events"
-    import {data} from "./data"
+    import type * as PIXI from "pixi.js"
+    import {createKeyboardInput, type KeyboardInput} from "./input/keyboard"
+    import {createPixiScene, type PixiScene} from "./render/pixiScene"
+    import {createFixedStepLoop, updateGame, type FixedStepLoop} from "./simulation/simulation"
+    import {createGameState, regenerateWorld, type GameState} from "./state/gameState"
+    import {setSetting, worldConfig} from "./state/settings"
+    import {createUI, type UIContainer} from "./ui"
+    import type {WorldSettings} from "./types";
 
-    const windowWidth = 1600
-    const windowHeight = 800
-    const gridSize = [800, 800]
-    const uiPosition = [1000, 0]
-    const baseTexture = PIXI.Texture.WHITE
-    let gridContainer: PIXI.Container
+    let container: HTMLElement
+    let scene: PixiScene
+    let input: KeyboardInput
+    let ui: UIContainer
+    let gameState: GameState
+    let simulation: FixedStepLoop
 
-    let app = new PIXI.Application()
+    const regenerateScene = () => {
+        regenerateWorld(gameState, worldConfig)
 
-    const textStyle = new PIXI.TextStyle({
-        fill: "0xffffff",
-        fontSize: 20,
-        wordWrap: true,
-        breakWords: true,
-        wordWrapWidth: 200
-    })
-    const sidePanelText = new PIXI.Text({
-        text: "",
-        style: textStyle,})
-    app.stage.addChild(sidePanelText)
-
-    const scaleApp = () => {
-        const scale = Math.min(window.innerHeight / windowHeight, window.innerWidth / windowWidth);
-        app.stage.scale.set(scale, scale)
-        app.renderer.resize(windowWidth * scale, windowHeight * scale)
+        ui.clearHoverInfo()
+        scene.renderPreview(gameState.world.grid)
+        scene.renderWorld(gameState.world)
+        scene.setPlayerPosition(gameState.player.position)
     }
 
-    const generateGrid = (position: number[], dimensions: number[]) => {
-        let data: number[][] = Perlin(dimensions, 8)
-        if (gridContainer) {
-            gridContainer.destroy({children:true})
-        }
+    const handleSettingChange = (id: keyof WorldSettings, value: number): void => {
+        setSetting(id, value)
+    }
 
-        gridContainer = new PIXI.Container()
-        gridContainer.position.set(position[0], position[1])
-        gridContainer.scale.set(Math.min(gridSize[0] / dimensions[0], gridSize[1] / dimensions[1]))
-        app.stage.addChild(gridContainer)
-        for (let row_index = 0; row_index < dimensions[1]; row_index++) {
-            for (let col_index = 0; col_index < dimensions[0]; col_index++) {
-                const cellSprite = new PIXI.Sprite({
-                    x:col_index, y:row_index,
-                    texture: baseTexture, alpha: data[row_index][col_index],
-                })
-                cellSprite.interactive = true
-                cellSprite.on("pointerenter", () => {
-                    cellSprite.tint = 0xff0000
-                    sidePanelText.text = `Cell at [${col_index}, ${row_index}]\nCost: ${data[row_index][col_index]}`
-                })
-                cellSprite.on("pointerleave", () => {
-                    cellSprite.tint = 0xffffff
-                })
-                gridContainer.addChild(cellSprite)
+    onMount(() => {
+        const tick = (ticker: PIXI.Ticker) => {
+            const changed = simulation.update(ticker.deltaMS / 1000)
+
+            if (changed) {
+                scene.setPlayerPosition(gameState.player.position)
             }
         }
-    }
 
-    onMount(async () => {
-        await app.init({width: windowWidth, height: windowHeight})
-        document.getElementById("app-container")?.appendChild(app.canvas)
+        const handleWheel = (event: WheelEvent) => {
+            scene.applyZoomFromWheel(event)
+        }
 
-        scaleApp()
-        window.addEventListener("resize", scaleApp)
+        const init = async () => {
+            ui = createUI({
+                onGenerateWorld: regenerateScene,
+                onSettingChange: handleSettingChange,
+            })
+            scene = createPixiScene()
+            input = createKeyboardInput(window)
+            gameState = createGameState(worldConfig)
+            simulation = createFixedStepLoop((deltaSeconds) => updateGame(gameState, input, deltaSeconds))
 
-        generateGrid([200, 0], [80, 80])
+            await scene.init(container, ui)
+            regenerateScene()
 
-        const ui = UI()
-        ui.position.set(uiPosition[0], uiPosition[1])
-        app.stage.addChild(ui)
+            window.addEventListener("wheel", handleWheel, {passive: false})
+            scene.app.ticker.add(tick)
+        }
 
-        eventBus.on("generateGrid", () => {generateGrid([200, 0], [data["gridWidth"], data["gridHeight"]])})
+        void init()
+
+        return () => {
+            window.removeEventListener("wheel", handleWheel)
+            scene?.app.ticker.remove(tick)
+            input?.destroy()
+            scene?.destroy()
+        }
     })
 </script>
 
-<main id="app-container"></main>
+<main bind:this={container}></main>
 
 <style>
     main {
