@@ -1,5 +1,6 @@
 import {createNoise2D} from "simplex-noise"
 import {createGrid} from "../../grid/grid"
+import type {Grid} from "../../types"
 
 const amplitudeDelta = 1.15
 
