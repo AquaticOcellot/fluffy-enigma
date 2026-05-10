@@ -22,7 +22,10 @@ export const cellDimensions: PixelDimensions = {
 
 export const playerConfig = {
     radius: 40,
-    speed: 1000,
+    horizontalSpeed: 1000,
+    verticalSpeed: 1000,
+    gravity: 1000,
+    maxFallSpeed: 2000,
 }
 
 export const cameraConfig = {
