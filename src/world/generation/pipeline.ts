@@ -1,4 +1,4 @@
-import {mapGrid, maxCellValue, minCellValue} from "../../grid/grid"
+import {mapGrid, maxCellValue, minCellValue, setCell} from "../../grid/grid"
 import type {Grid, WorldConfig} from "../../types"
 import {generatePerlinGrid} from "./perlin"
 
@@ -48,11 +48,17 @@ export const round: WorldGenerationPass = (grid, context) => {
     })
 }
 
+export const createLanding: WorldGenerationPass = (grid: Grid) => {
+    setCell(grid, 0, 0, 0)
+    return grid
+}
+
 export const createDefaultWorldGenerationPipeline = (settings: WorldConfig): WorldGenerationPipeline => ({
     base: () => generatePerlinGrid(settings.gridWidth, settings.gridHeight, settings.layers),
     passes: [
         normalize,
         round,
+        createLanding,
     ],
 })
 

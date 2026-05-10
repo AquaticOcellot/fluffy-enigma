@@ -8,7 +8,7 @@ export type PixelDimensions = {
     height: number
 }
 
-export type WorldConstants = {
+export type WorldGenerationConstants = {
     layers: number
     roundingTargets: number[]
 }
@@ -18,7 +18,7 @@ export type WorldSettings = {
     gridHeight: number
 }
 
-export type WorldConfig = WorldConstants & WorldSettings
+export type WorldConfig = WorldGenerationConstants & WorldSettings
 
 export type Grid = number[][]
 

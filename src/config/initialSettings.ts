@@ -1,4 +1,4 @@
-import type {PixelDimensions, WorldConstants} from "../types"
+import type {PixelDimensions, WorldGenerationConstants} from "../types"
 
 export const appDimensions: PixelDimensions = {
     width: 1600,
@@ -20,13 +20,8 @@ export const cellDimensions: PixelDimensions = {
     height: 100,
 }
 
-export const gridDimensions = {
-    gridWidth: 20,
-    gridHeight: 10,
-}
-
 export const playerConfig = {
-    radius: 80,
+    radius: 40,
     speed: 1000,
 }
 
@@ -36,8 +31,12 @@ export const cameraConfig = {
     zoomStep: 0.1,
 }
 
-export const worldConstants: WorldConstants = {
+export const initialWorldSettings = {
+    gridWidth: 20,
+    gridHeight: 10,
+}
+
+export const worldGenerationConstants: WorldGenerationConstants = {
     layers: 5,
     roundingTargets: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
 }
-
