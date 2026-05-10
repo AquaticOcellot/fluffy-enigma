@@ -134,7 +134,7 @@ const createSlider = (
         width: dimensions.width, height: dimensions.height,
         parent: slider,
         texture: PIXI.Texture.WHITE,
-        tint: "#011111"
+        tint: "#111111"
     })
 
     const handle = new PIXI.Sprite({
