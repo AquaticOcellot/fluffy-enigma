@@ -6,7 +6,7 @@ import type {WorldSettings, Vector2} from "./types"
 const overlayPadding = 10
 const hoverInfoWidth = 200
 const textStyle = new PIXI.TextStyle({
-    fill: "0xffffff",
+    fill: "#ffffff",
     fontSize: 20,
     wordWrap: true,
     breakWords: true,
@@ -134,14 +134,14 @@ const createSlider = (
         width: dimensions.width, height: dimensions.height,
         parent: slider,
         texture: PIXI.Texture.WHITE,
-        tint: "0x111111"
+        tint: "#011111"
     })
 
     const handle = new PIXI.Sprite({
         width: dimensions.width / 10, height: dimensions.height,
         parent: slider,
         texture: PIXI.Texture.WHITE,
-        tint: "0x444444"
+        tint: "#444444"
     })
     const valueText = new PIXI.Text({text: value, style: textStyle, parent: slider})
 

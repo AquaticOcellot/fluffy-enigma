@@ -49,7 +49,7 @@ export const createPixiScene = (): PixiScene => {
                 y: 0,
                 width: mainDisplayDimensions.width,
                 height: mainDisplayDimensions.height,
-                tint: "0x111111",
+                tint: "#000000",
             }))
 
             worldViewport.addChild(worldCamera)

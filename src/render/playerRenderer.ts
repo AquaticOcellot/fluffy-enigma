@@ -4,7 +4,7 @@ import type {Vector2} from "../types"
 
 export const createPlayerGraphic = () => {
     const playerGraphic = new PIXI.Graphics()
-    playerGraphic.circle(0, 0, playerConfig.radius).fill(0x42f59b)
+    playerGraphic.circle(0, 0, playerConfig.radius).fill({color: "#333333"})
     return playerGraphic
 }
 

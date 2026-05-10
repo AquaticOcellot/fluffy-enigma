@@ -80,6 +80,6 @@
         align-items: center;
         height: 100vh;
         border: 0;
-        background-color: #111111;
+        background-color: #000000;
     }
 </style>

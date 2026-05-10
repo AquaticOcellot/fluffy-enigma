@@ -1,7 +1,7 @@
 import * as PIXI from "pixi.js"
 import {getGridDimensions} from "../grid/grid"
 import type {PixelDimensions, World} from "../types"
-import {baseTexture} from "./renderConstants"
+import {baseTexture, earthTint} from "./renderConstants"
 
 export type WorldRenderer = {
     render: (world: World) => void
@@ -35,6 +35,7 @@ export const createWorldRenderer = (
                         height: options.cellDimensions.height,
                         texture: baseTexture,
                         alpha: world.grid[y][x],
+                        tint: earthTint,
                     }))
                 }
             }
