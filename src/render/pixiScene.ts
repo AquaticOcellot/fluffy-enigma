@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js"
 import {appDimensions, cellDimensions, mainDisplayDimensions} from "../config/initialSettings"
-import type {Grid, Vector2, World} from "../types"
+import type {Vector2, WorldRenderView} from "../types"
 import type {UIContainer} from "../ui"
 import {createCamera} from "./camera"
 import {createPlayerGraphic, renderPlayer} from "./playerRenderer"
@@ -12,8 +12,8 @@ export type PixiScene = {
     app: PIXI.Application
     init: (container: HTMLElement, ui: UIContainer) => Promise<void>
     destroy: () => void
-    renderWorld: (world: World) => void
-    renderPreview: (grid: Grid) => void
+    renderWorld: (view: WorldRenderView) => void
+    renderPreview: (view: WorldRenderView) => void
     setPlayerPosition: (position: Vector2) => void
     applyZoomFromWheel: (event: WheelEvent) => void
 }
@@ -76,11 +76,11 @@ export const createPixiScene = (): PixiScene => {
             previewRenderer?.destroy()
             app.destroy(true)
         },
-        renderWorld: (world) => {
-            worldRenderer?.render(world)
+        renderWorld: (view) => {
+            worldRenderer?.render(view)
         },
-        renderPreview: (grid) => {
-            previewRenderer?.render(grid)
+        renderPreview: (view) => {
+            previewRenderer?.render(view)
         },
         setPlayerPosition: (position) => {
             renderPlayer(playerGraphic, position)

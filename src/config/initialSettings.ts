@@ -26,10 +26,13 @@ export const playerConfig = {
     verticalSpeed: 1000,
     gravity: 1000,
     maxFallSpeed: 2000,
+    maxFuel: 100,
+    drillDuration: 0.5,
+    visionRange: 450,
 }
 
 export const cameraConfig = {
-    minZoom: 0.5,
+    minZoom: 0.2,
     maxZoom: 3,
     zoomStep: 0.1,
 }

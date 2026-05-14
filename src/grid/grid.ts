@@ -3,15 +3,15 @@ import type {Grid} from "../types"
 export type CellVisitor = (value: number, x: number, y: number) => void
 export type CellMapper = (value: number, x: number, y: number) => number
 
-export const createGrid = (
+export const createGrid = <T = number>(
     gridWidth: number,
     gridHeight: number,
-    getValue: (x: number, y: number) => number = () => 0
-): Grid => {
-    const grid: Grid = []
+    getValue: (x: number, y: number) => T = (() => 0) as (x: number, y: number) => T
+): T[][] => {
+    const grid: T[][] = []
 
     for (let y = 0; y < gridHeight; y++) {
-        const row: number[] = []
+        const row: T[] = []
 
         for (let x = 0; x < gridWidth; x++) {
             row.push(getValue(x, y))
@@ -47,7 +47,7 @@ export const forEachCell = (grid: Grid, visitor: CellVisitor) => {
 export const mapGrid = (grid: Grid, mapper: CellMapper): Grid => {
     const {gridWidth, gridHeight} = getGridDimensions(grid)
 
-    return createGrid(gridWidth, gridHeight, (x, y) => mapper(grid[y][x], x, y))
+    return createGrid<number>(gridWidth, gridHeight, (x, y) => mapper(grid[y][x], x, y))
 }
 
 export const maxCellValue = (grid: Grid) => {

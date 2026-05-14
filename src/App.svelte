@@ -16,12 +16,28 @@
     let gameState: GameState
     let simulation: FixedStepLoop
 
+    const renderWorld = () => {
+        scene.renderWorld({
+            world: gameState.world,
+            knowledge: gameState.knowledge,
+            playerPosition: gameState.player.position,
+        })
+    }
+
+    const renderPreview = () => {
+        scene.renderPreview({
+            world: gameState.world,
+            knowledge: gameState.knowledge,
+            playerPosition: gameState.player.position,
+        })
+    }
+
     const regenerateScene = () => {
         regenerateWorld(gameState, worldConfig)
 
         ui.clearHoverInfo()
-        scene.renderPreview(gameState.world.grid)
-        scene.renderWorld(gameState.world)
+        renderPreview()
+        renderWorld()
         scene.setPlayerPosition(gameState.player.position)
     }
 
@@ -31,10 +47,15 @@
 
     onMount(() => {
         const tick = (ticker: PIXI.Ticker) => {
-            const changed = simulation.update(ticker.deltaMS / 1000)
+            const update = simulation.update(ticker.deltaMS / 1000)
 
-            if (changed) {
+            if (update.playerMoved) {
                 scene.setPlayerPosition(gameState.player.position)
+            }
+
+            if (update.playerMoved || update.worldChanged || update.visionChanged) {
+                renderWorld()
+                renderPreview()
             }
         }
 

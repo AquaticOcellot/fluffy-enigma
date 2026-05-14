@@ -7,11 +7,25 @@ export type CircleCollision = {
     tolerance?: number
 }
 
+export type SolidCellCollision = {
+    x: number
+    y: number
+    value: number
+}
+
 export const collidesWithSolidCell = (
     world: World,
     cellDimensions: PixelDimensions,
     circle: CircleCollision
 ) => {
+    return findSolidCellCollision(world, cellDimensions, circle) !== null
+}
+
+export const findSolidCellCollision = (
+    world: World,
+    cellDimensions: PixelDimensions,
+    circle: CircleCollision
+): SolidCellCollision | null => {
     const {gridWidth, gridHeight} = getGridDimensions(world.grid)
     const radius = getCollisionRadius(circle)
     const minCellX = worldToCellIndex(circle.position.x - radius, cellDimensions.width)
@@ -30,12 +44,12 @@ export const collidesWithSolidCell = (
             }
 
             if (circleIntersectsCell(circle, x, y, cellDimensions)) {
-                return true
+                return {x, y, value: getCell(world.grid, x, y) ?? 0}
             }
         }
     }
 
-    return false
+    return null
 }
 
 export const collidesWithWorldBounds = (

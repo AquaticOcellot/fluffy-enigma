@@ -21,8 +21,18 @@ export type WorldSettings = {
 export type WorldConfig = WorldGenerationConstants & WorldSettings
 
 export type Grid = number[][]
+export type MemoryGrid = (number | null)[][]
 
 export type World = {
     grid: Grid
 }
 
+export type WorldKnowledge = {
+    memory: MemoryGrid
+}
+
+export type WorldRenderView = {
+    world: World
+    knowledge: WorldKnowledge
+    playerPosition: Vector2
+}
