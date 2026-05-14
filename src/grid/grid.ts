@@ -6,7 +6,7 @@ export type CellMapper = (value: number, x: number, y: number) => number
 export const createGrid = <T = number>(
     gridWidth: number,
     gridHeight: number,
-    getValue: (x: number, y: number) => T = (() => 0) as (x: number, y: number) => T
+    getValue: (x: number, y: number) => T = (() => 0) as unknown as (x: number, y: number) => T
 ): T[][] => {
     const grid: T[][] = []
 
