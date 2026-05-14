@@ -1,6 +1,6 @@
 import {cellDimensions, playerConfig} from "../config/initialSettings"
 import {createGrid, getGridDimensions} from "../grid/grid"
-import type {MemoryGrid, Vector2, World, WorldKnowledge} from "../types"
+import type {Vector2, World, WorldKnowledge} from "../types"
 
 export const createWorldKnowledge = (world: World, playerPosition: Vector2): WorldKnowledge => {
     const {gridWidth, gridHeight} = getGridDimensions(world.grid)
